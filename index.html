@@ -1,13 +1,413 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AI Assistant</title>
-  </head>
-  <body>
-    <h1>AI Assistant</h1>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Progressive Quote Stream Tester</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f5f7fb;
+      color: #1f2937;
+    }
+    .container {
+      width: min(1100px, calc(100% - 32px));
+      margin: 32px auto;
+    }
+    h1 { margin-bottom: 8px; }
+    .subtitle { margin-top: 0; color: #6b7280; }
+    .panel {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .field { margin-bottom: 16px; }
+    label { display: block; margin-bottom: 6px; font-weight: 600; }
+    input, textarea {
+      width: 100%;
+      padding: 11px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    textarea { min-height: 80px; resize: vertical; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    button {
+      border: 0;
+      border-radius: 8px;
+      padding: 11px 18px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .primary { background: #111827; color: white; }
+    .secondary { background: #e5e7eb; color: #111827; }
+    .danger { background: #fee2e2; color: #991b1b; }
+    .status {
+      margin-top: 16px;
+      padding: 10px 12px;
+      background: #f3f4f6;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    .quotes {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+    }
+    .quote-card {
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 16px;
+      background: #fff;
+    }
+    .quote-card h3 { margin: 0 0 10px; text-transform: uppercase; }
+    .loading { color: #92400e; }
+    .success { color: #166534; }
+    .failed { color: #991b1b; }
+    .premium { font-size: 22px; font-weight: 700; margin: 8px 0; }
+    pre {
+      background: #111827;
+      color: #f9fafb;
+      padding: 16px;
+      border-radius: 10px;
+      overflow: auto;
+      max-height: 420px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .event {
+      padding: 8px 0;
+      border-bottom: 1px solid #374151;
+    }
+    .time { color: #9ca3af; margin-right: 8px; }
+    .note { font-size: 13px; color: #6b7280; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Progressive Quote Stream Tester</h1>
+    <p class="subtitle">Tests POST + NDJSON streaming and shows each insurer as soon as it arrives.</p>
 
-   <script src="https://ai-employees-21.emergent.host/api/public/widget.js" data-assistant-id="asst_pub_280e0c350ded3de969a1b583" async></script>
-  </body>
+    <div class="panel">
+      <div class="field">
+        <label for="apiUrl">Streaming API URL</label>
+        <input id="apiUrl" type="text" placeholder="https://your-domain.com/api/v1/quotation/get-quotation/stream" />
+      </div>
+
+      <div class="field">
+        <label for="applicationUuid">Application UUID</label>
+        <input id="applicationUuid" type="text" placeholder="69bbc32d-2bd3-4896-bb88-85d888eae5bc" />
+      </div>
+
+      <div class="field">
+        <label for="token">Bearer Token (optional)</label>
+        <textarea id="token" placeholder="Paste token only, without 'Bearer '"></textarea>
+      </div>
+
+      <div class="actions">
+        <button class="primary" id="startBtn">Start Stream</button>
+        <button class="danger" id="stopBtn">Stop Stream</button>
+        <button class="secondary" id="clearBtn">Clear</button>
+      </div>
+
+      <div class="status" id="status">Status: Idle</div>
+
+      <p class="note">
+        If you host this page online, your API must allow CORS. If the page is HTTPS, the API should also be HTTPS or the browser may block mixed content.
+      </p>
+    </div>
+
+    <div class="panel">
+      <h2>Insurer Status</h2>
+      <div class="quotes" id="quotes"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Live NDJSON Events</h2>
+      <pre id="log"></pre>
+    </div>
+  </div>
+
+  <script>
+    let abortController = null;
+    const insurerState = {};
+
+    const apiUrlInput = document.getElementById("apiUrl");
+    const applicationUuidInput = document.getElementById("applicationUuid");
+    const tokenInput = document.getElementById("token");
+    const statusEl = document.getElementById("status");
+    const logEl = document.getElementById("log");
+    const quotesEl = document.getElementById("quotes");
+
+    function setStatus(message) {
+      statusEl.textContent = `Status: ${message}`;
+    }
+
+    function logEvent(event) {
+      const now = new Date().toLocaleTimeString();
+      const wrapper = document.createElement("div");
+      wrapper.className = "event";
+
+      const time = document.createElement("span");
+      time.className = "time";
+      time.textContent = `[${now}]`;
+
+      const content = document.createElement("span");
+      content.textContent = ` ${JSON.stringify(event, null, 2)}`;
+
+      wrapper.appendChild(time);
+      wrapper.appendChild(content);
+      logEl.appendChild(wrapper);
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function renderInsurers() {
+      quotesEl.innerHTML = "";
+
+      Object.entries(insurerState).forEach(([insurer, data]) => {
+        const card = document.createElement("div");
+        card.className = "quote-card";
+
+        const title = document.createElement("h3");
+        title.textContent = insurer;
+
+        const state = document.createElement("div");
+        state.className =
+          data.status === "success" ? "success" :
+          data.status === "failed" ? "failed" : "loading";
+
+        state.textContent =
+          data.status === "success" ? "Quote received" :
+          data.status === "failed" ? "Failed" : "Loading...";
+
+        card.appendChild(title);
+        card.appendChild(state);
+
+        if (data.status === "success" && data.quotation) {
+          const premium =
+            data.quotation?.quotationDetails?.premium?.totalPremium ??
+            data.quotation?.quotation_details?.premium?.totalPremium ??
+            null;
+
+          const quoteNumber =
+            data.quotation?.quoteNumber ??
+            data.quotation?.quote_number ??
+            "";
+
+          if (premium !== null && premium !== undefined) {
+            const premiumEl = document.createElement("div");
+            premiumEl.className = "premium";
+            premiumEl.textContent = `₹${Number(premium).toLocaleString("en-IN")}`;
+            card.appendChild(premiumEl);
+          }
+
+          if (quoteNumber) {
+            const qn = document.createElement("div");
+            qn.textContent = `Quote: ${quoteNumber}`;
+            card.appendChild(qn);
+          }
+
+          const details = document.createElement("details");
+          details.style.marginTop = "10px";
+
+          const summary = document.createElement("summary");
+          summary.textContent = "View response";
+
+          const json = document.createElement("pre");
+          json.style.maxHeight = "250px";
+          json.textContent = JSON.stringify(data.quotation, null, 2);
+
+          details.appendChild(summary);
+          details.appendChild(json);
+          card.appendChild(details);
+        }
+
+        if (data.status === "failed" && data.error) {
+          const error = document.createElement("div");
+          error.style.marginTop = "8px";
+          error.textContent = data.error.message || JSON.stringify(data.error);
+          card.appendChild(error);
+        }
+
+        quotesEl.appendChild(card);
+      });
+    }
+
+    function handleEvent(event) {
+      logEvent(event);
+
+      if (event.type === "started") {
+        setStatus("Stream started");
+
+        const insurers = Array.isArray(event.insurers) ? event.insurers : [];
+        insurers.forEach((insurer) => {
+          insurerState[insurer] = {
+            status: "loading",
+            quotation: null,
+            error: null
+          };
+        });
+
+        renderInsurers();
+        return;
+      }
+
+      if (event.type === "quote") {
+        insurerState[event.insurer] = {
+          status: "success",
+          quotation: event.quotation,
+          error: null
+        };
+        renderInsurers();
+        return;
+      }
+
+      if (event.type === "failed") {
+        insurerState[event.insurer] = {
+          status: "failed",
+          quotation: null,
+          error: event.error || {}
+        };
+        renderInsurers();
+        return;
+      }
+
+      if (event.type === "complete") {
+        setStatus(`Complete — ${event.quotationCount ?? 0} quote(s), ${event.failedCount ?? 0} failed`);
+        return;
+      }
+
+      if (event.type === "fatal_error") {
+        setStatus("Fatal stream error");
+      }
+    }
+
+    async function startStream() {
+      const apiUrl = apiUrlInput.value.trim();
+      const applicationUuid = applicationUuidInput.value.trim();
+      const token = tokenInput.value.trim();
+
+      if (!apiUrl) {
+        alert("Enter the streaming API URL.");
+        return;
+      }
+
+      if (!applicationUuid) {
+        alert("Enter applicationUuid.");
+        return;
+      }
+
+      Object.keys(insurerState).forEach((key) => delete insurerState[key]);
+      quotesEl.innerHTML = "";
+      logEl.innerHTML = "";
+
+      abortController = new AbortController();
+      setStatus("Connecting...");
+
+      const headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/x-ndjson"
+      };
+
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
+      try {
+        const response = await fetch(apiUrl, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ applicationUuid }),
+          signal: abortController.signal
+        });
+
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(`HTTP ${response.status}: ${text}`);
+        }
+
+        if (!response.body) {
+          throw new Error("Streaming response body is not available in this browser.");
+        }
+
+        setStatus("Receiving streamed events...");
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        while (true) {
+          const { value, done } = await reader.read();
+
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+
+          const lines = buffer.split(/\r?\n/);
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed) continue;
+
+            try {
+              handleEvent(JSON.parse(trimmed));
+            } catch (parseError) {
+              console.error("Unable to parse NDJSON line:", trimmed, parseError);
+            }
+          }
+        }
+
+        if (buffer.trim()) {
+          try {
+            handleEvent(JSON.parse(buffer.trim()));
+          } catch (parseError) {
+            console.error("Unable to parse final NDJSON line:", buffer, parseError);
+          }
+        }
+
+        if (!abortController.signal.aborted) {
+          setStatus("Connection closed");
+        }
+      } catch (error) {
+        if (error.name === "AbortError") {
+          setStatus("Stopped by user");
+          return;
+        }
+
+        console.error(error);
+        setStatus(`Error: ${error.message}`);
+
+        logEvent({
+          type: "client_error",
+          message: error.message
+        });
+      }
+    }
+
+    function stopStream() {
+      if (abortController) {
+        abortController.abort();
+        abortController = null;
+      }
+    }
+
+    function clearAll() {
+      stopStream();
+      Object.keys(insurerState).forEach((key) => delete insurerState[key]);
+      quotesEl.innerHTML = "";
+      logEl.innerHTML = "";
+      setStatus("Idle");
+    }
+
+    document.getElementById("startBtn").addEventListener("click", startStream);
+    document.getElementById("stopBtn").addEventListener("click", stopStream);
+    document.getElementById("clearBtn").addEventListener("click", clearAll);
+  </script>
+</body>
 </html>
