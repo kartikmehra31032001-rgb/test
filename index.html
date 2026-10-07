@@ -3,411 +3,371 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Progressive Quote Stream Tester</title>
+  <title>Photon PIN Code Tester</title>
   <style>
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
+      font-family: Inter, Arial, sans-serif;
       background: #f5f7fb;
-      color: #1f2937;
+      color: #172033;
     }
-    .container {
-      width: min(1100px, calc(100% - 32px));
-      margin: 32px auto;
+    .wrap {
+      max-width: 980px;
+      margin: 40px auto;
+      padding: 0 20px 40px;
     }
-    h1 { margin-bottom: 8px; }
-    .subtitle { margin-top: 0; color: #6b7280; }
-    .panel {
+    .card {
       background: #fff;
-      border: 1px solid #e5e7eb;
-      border-radius: 12px;
-      padding: 20px;
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 12px 40px rgba(26, 39, 72, .08);
       margin-bottom: 20px;
     }
-    .field { margin-bottom: 16px; }
-    label { display: block; margin-bottom: 6px; font-weight: 600; }
-    input, textarea {
-      width: 100%;
-      padding: 11px 12px;
-      border: 1px solid #d1d5db;
-      border-radius: 8px;
-      font-size: 14px;
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    h2 { margin-top: 0; }
+    .sub {
+      color: #667085;
+      margin-bottom: 24px;
+      line-height: 1.5;
     }
-    textarea { min-height: 80px; resize: vertical; }
-    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
-    button {
-      border: 0;
-      border-radius: 8px;
-      padding: 11px 18px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 600;
-    }
-    .primary { background: #111827; color: white; }
-    .secondary { background: #e5e7eb; color: #111827; }
-    .danger { background: #fee2e2; color: #991b1b; }
-    .status {
-      margin-top: 16px;
-      padding: 10px 12px;
-      background: #f3f4f6;
-      border-radius: 8px;
-      font-size: 14px;
-    }
-    .quotes {
+    .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      grid-template-columns: repeat(3, 1fr);
       gap: 14px;
     }
-    .quote-card {
-      border: 1px solid #e5e7eb;
-      border-radius: 10px;
-      padding: 16px;
-      background: #fff;
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 7px;
+      color: #344054;
     }
-    .quote-card h3 { margin: 0 0 10px; text-transform: uppercase; }
-    .loading { color: #92400e; }
-    .success { color: #166534; }
-    .failed { color: #991b1b; }
-    .premium { font-size: 22px; font-weight: 700; margin: 8px 0; }
-    pre {
-      background: #111827;
-      color: #f9fafb;
-      padding: 16px;
+    input {
+      width: 100%;
+      padding: 12px 13px;
+      border: 1px solid #d0d5dd;
       border-radius: 10px;
-      overflow: auto;
-      max-height: 420px;
-      white-space: pre-wrap;
+      font-size: 15px;
+      outline: none;
+    }
+    input:focus { border-color: #667085; }
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 12px 17px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .primary { background: #111827; color: white; }
+    .secondary { background: #eef2f6; color: #172033; }
+    .status {
+      margin-top: 18px;
+      padding: 14px;
+      border-radius: 12px;
+      display: none;
+      line-height: 1.5;
+    }
+    .info { display:block; background:#eef4ff; color:#1d4ed8; }
+    .success { display:block; background:#ecfdf3; color:#027a48; }
+    .warn { display:block; background:#fffaeb; color:#b54708; }
+    .error { display:block; background:#fef3f2; color:#b42318; }
+    .result-grid {
+      display:grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 18px;
+    }
+    .result {
+      border: 1px solid #eaecf0;
+      border-radius: 12px;
+      padding: 14px;
+      background:#fcfcfd;
+    }
+    .result span {
+      color:#667085;
+      font-size:12px;
+      display:block;
+      margin-bottom:5px;
+    }
+    .result strong {
+      font-size:16px;
       word-break: break-word;
     }
-    .event {
-      padding: 8px 0;
-      border-bottom: 1px solid #374151;
+    .pin {
+      font-size: 34px !important;
+      letter-spacing: 2px;
     }
-    .time { color: #9ca3af; margin-right: 8px; }
-    .note { font-size: 13px; color: #6b7280; line-height: 1.5; }
+    pre {
+      margin: 0;
+      padding: 18px;
+      border-radius: 12px;
+      background: #101828;
+      color: #e4e7ec;
+      overflow: auto;
+      max-height: 480px;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .note {
+      font-size: 13px;
+      color: #667085;
+      line-height: 1.55;
+      margin-top: 14px;
+    }
+    @media (max-width: 720px) {
+      .grid, .result-grid { grid-template-columns: 1fr; }
+      .wrap { margin-top: 20px; }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Progressive Quote Stream Tester</h1>
-    <p class="subtitle">Tests POST + NDJSON streaming and shows each insurer as soon as it arrives.</p>
-
-    <div class="panel">
-      <div class="field">
-        <label for="apiUrl">Streaming API URL</label>
-        <input id="apiUrl" type="text" placeholder="https://your-domain.com/api/v1/quotation/get-quotation/stream" />
+  <div class="wrap">
+    <div class="card">
+      <h1>📍 Photon PIN Code Detection Tester</h1>
+      <div class="sub">
+        Uses your browser GPS or manual latitude/longitude with the free Photon reverse-geocoding API.
+        No API key is required.
       </div>
 
-      <div class="field">
-        <label for="applicationUuid">Application UUID</label>
-        <input id="applicationUuid" type="text" placeholder="69bbc32d-2bd3-4896-bb88-85d888eae5bc" />
-      </div>
-
-      <div class="field">
-        <label for="token">Bearer Token (optional)</label>
-        <textarea id="token" placeholder="Paste token only, without 'Bearer '"></textarea>
+      <div class="grid">
+        <div>
+          <label for="lat">Latitude</label>
+          <input id="lat" type="number" step="any" value="30.9067776" />
+        </div>
+        <div>
+          <label for="lon">Longitude</label>
+          <input id="lon" type="number" step="any" value="75.9103488" />
+        </div>
+        <div>
+          <label for="expectedPin">Expected PIN</label>
+          <input id="expectedPin" type="text" maxlength="6" value="141001" />
+        </div>
       </div>
 
       <div class="actions">
-        <button class="primary" id="startBtn">Start Stream</button>
-        <button class="danger" id="stopBtn">Stop Stream</button>
-        <button class="secondary" id="clearBtn">Clear</button>
+        <button class="primary" onclick="useMyLocation()">📍 Use My Current Location</button>
+        <button class="secondary" onclick="testCoordinates()">Test Lat / Long</button>
       </div>
 
-      <div class="status" id="status">Status: Idle</div>
+      <div id="status" class="status"></div>
 
-      <p class="note">
-        If you host this page online, your API must allow CORS. If the page is HTTPS, the API should also be HTTPS or the browser may block mixed content.
-      </p>
+      <div id="results" class="result-grid" style="display:none;">
+        <div class="result">
+          <span>Detected PIN</span>
+          <strong id="postcode" class="pin">—</strong>
+        </div>
+        <div class="result">
+          <span>PIN Match</span>
+          <strong id="pinMatch">—</strong>
+        </div>
+        <div class="result">
+          <span>Name</span>
+          <strong id="name">—</strong>
+        </div>
+        <div class="result">
+          <span>City</span>
+          <strong id="city">—</strong>
+        </div>
+        <div class="result">
+          <span>District / County</span>
+          <strong id="district">—</strong>
+        </div>
+        <div class="result">
+          <span>State</span>
+          <strong id="state">—</strong>
+        </div>
+        <div class="result">
+          <span>Country</span>
+          <strong id="country">—</strong>
+        </div>
+        <div class="result">
+          <span>Street</span>
+          <strong id="street">—</strong>
+        </div>
+        <div class="result">
+          <span>Latitude</span>
+          <strong id="outLat">—</strong>
+        </div>
+        <div class="result">
+          <span>Longitude</span>
+          <strong id="outLon">—</strong>
+        </div>
+        <div class="result">
+          <span>GPS Accuracy</span>
+          <strong id="accuracy">Manual coordinate test</strong>
+        </div>
+        <div class="result">
+          <span>OSM Type</span>
+          <strong id="osmType">—</strong>
+        </div>
+      </div>
+
+      <div class="note">
+        If Photon finds the location but does not return a postcode, the page will show
+        <b>"Not returned"</b>. That means the underlying map data does not include a PIN for that exact result.
+      </div>
     </div>
 
-    <div class="panel">
-      <h2>Insurer Status</h2>
-      <div class="quotes" id="quotes"></div>
-    </div>
-
-    <div class="panel">
-      <h2>Live NDJSON Events</h2>
-      <pre id="log"></pre>
+    <div class="card">
+      <h2>Raw API Response</h2>
+      <pre id="raw">{ "message": "Run a test to see the Photon API response here." }</pre>
     </div>
   </div>
 
   <script>
-    let abortController = null;
-    const insurerState = {};
+    const API_URL = "https://photon.komoot.io/reverse";
 
-    const apiUrlInput = document.getElementById("apiUrl");
-    const applicationUuidInput = document.getElementById("applicationUuid");
-    const tokenInput = document.getElementById("token");
-    const statusEl = document.getElementById("status");
-    const logEl = document.getElementById("log");
-    const quotesEl = document.getElementById("quotes");
-
-    function setStatus(message) {
-      statusEl.textContent = `Status: ${message}`;
+    function setStatus(message, type = "info") {
+      const box = document.getElementById("status");
+      box.className = "status " + type;
+      box.textContent = message;
     }
 
-    function logEvent(event) {
-      const now = new Date().toLocaleTimeString();
-      const wrapper = document.createElement("div");
-      wrapper.className = "event";
-
-      const time = document.createElement("span");
-      time.className = "time";
-      time.textContent = `[${now}]`;
-
-      const content = document.createElement("span");
-      content.textContent = ` ${JSON.stringify(event, null, 2)}`;
-
-      wrapper.appendChild(time);
-      wrapper.appendChild(content);
-      logEl.appendChild(wrapper);
-      logEl.scrollTop = logEl.scrollHeight;
+    function cleanPin(value) {
+      return String(value || "").replace(/\D/g, "").trim();
     }
 
-    function renderInsurers() {
-      quotesEl.innerHTML = "";
-
-      Object.entries(insurerState).forEach(([insurer, data]) => {
-        const card = document.createElement("div");
-        card.className = "quote-card";
-
-        const title = document.createElement("h3");
-        title.textContent = insurer;
-
-        const state = document.createElement("div");
-        state.className =
-          data.status === "success" ? "success" :
-          data.status === "failed" ? "failed" : "loading";
-
-        state.textContent =
-          data.status === "success" ? "Quote received" :
-          data.status === "failed" ? "Failed" : "Loading...";
-
-        card.appendChild(title);
-        card.appendChild(state);
-
-        if (data.status === "success" && data.quotation) {
-          const premium =
-            data.quotation?.quotationDetails?.premium?.totalPremium ??
-            data.quotation?.quotation_details?.premium?.totalPremium ??
-            null;
-
-          const quoteNumber =
-            data.quotation?.quoteNumber ??
-            data.quotation?.quote_number ??
-            "";
-
-          if (premium !== null && premium !== undefined) {
-            const premiumEl = document.createElement("div");
-            premiumEl.className = "premium";
-            premiumEl.textContent = `₹${Number(premium).toLocaleString("en-IN")}`;
-            card.appendChild(premiumEl);
-          }
-
-          if (quoteNumber) {
-            const qn = document.createElement("div");
-            qn.textContent = `Quote: ${quoteNumber}`;
-            card.appendChild(qn);
-          }
-
-          const details = document.createElement("details");
-          details.style.marginTop = "10px";
-
-          const summary = document.createElement("summary");
-          summary.textContent = "View response";
-
-          const json = document.createElement("pre");
-          json.style.maxHeight = "250px";
-          json.textContent = JSON.stringify(data.quotation, null, 2);
-
-          details.appendChild(summary);
-          details.appendChild(json);
-          card.appendChild(details);
-        }
-
-        if (data.status === "failed" && data.error) {
-          const error = document.createElement("div");
-          error.style.marginTop = "8px";
-          error.textContent = data.error.message || JSON.stringify(data.error);
-          card.appendChild(error);
-        }
-
-        quotesEl.appendChild(card);
-      });
-    }
-
-    function handleEvent(event) {
-      logEvent(event);
-
-      if (event.type === "started") {
-        setStatus("Stream started");
-
-        const insurers = Array.isArray(event.insurers) ? event.insurers : [];
-        insurers.forEach((insurer) => {
-          insurerState[insurer] = {
-            status: "loading",
-            quotation: null,
-            error: null
-          };
-        });
-
-        renderInsurers();
-        return;
-      }
-
-      if (event.type === "quote") {
-        insurerState[event.insurer] = {
-          status: "success",
-          quotation: event.quotation,
-          error: null
-        };
-        renderInsurers();
-        return;
-      }
-
-      if (event.type === "failed") {
-        insurerState[event.insurer] = {
-          status: "failed",
-          quotation: null,
-          error: event.error || {}
-        };
-        renderInsurers();
-        return;
-      }
-
-      if (event.type === "complete") {
-        setStatus(`Complete — ${event.quotationCount ?? 0} quote(s), ${event.failedCount ?? 0} failed`);
-        return;
-      }
-
-      if (event.type === "fatal_error") {
-        setStatus("Fatal stream error");
-      }
-    }
-
-    async function startStream() {
-      const apiUrl = apiUrlInput.value.trim();
-      const applicationUuid = applicationUuidInput.value.trim();
-      const token = tokenInput.value.trim();
-
-      if (!apiUrl) {
-        alert("Enter the streaming API URL.");
-        return;
-      }
-
-      if (!applicationUuid) {
-        alert("Enter applicationUuid.");
-        return;
-      }
-
-      Object.keys(insurerState).forEach((key) => delete insurerState[key]);
-      quotesEl.innerHTML = "";
-      logEl.innerHTML = "";
-
-      abortController = new AbortController();
-      setStatus("Connecting...");
-
-      const headers = {
-        "Content-Type": "application/json",
-        "Accept": "application/x-ndjson"
-      };
-
-      if (token) {
-        headers.Authorization = `Bearer ${token}`;
-      }
+    async function reverseGeocode(latitude, longitude, accuracyText = "Manual coordinate test") {
+      setStatus("Checking coordinates with Photon...", "info");
 
       try {
-        const response = await fetch(apiUrl, {
-          method: "POST",
-          headers,
-          body: JSON.stringify({ applicationUuid }),
-          signal: abortController.signal
-        });
+        const url =
+          `${API_URL}?lat=${encodeURIComponent(latitude)}` +
+          `&lon=${encodeURIComponent(longitude)}`;
+
+        const response = await fetch(url);
 
         if (!response.ok) {
-          const text = await response.text();
-          throw new Error(`HTTP ${response.status}: ${text}`);
+          throw new Error(`Photon API returned HTTP ${response.status}`);
         }
 
-        if (!response.body) {
-          throw new Error("Streaming response body is not available in this browser.");
-        }
+        const data = await response.json();
+        document.getElementById("raw").textContent = JSON.stringify(data, null, 2);
 
-        setStatus("Receiving streamed events...");
+        const feature = data?.features?.[0];
+        const props = feature?.properties || {};
+        const coords = feature?.geometry?.coordinates || [longitude, latitude];
 
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = "";
+        document.getElementById("results").style.display = "grid";
 
-        while (true) {
-          const { value, done } = await reader.read();
+        const detectedPin = cleanPin(props.postcode);
+        const expectedPin = cleanPin(document.getElementById("expectedPin").value);
 
-          if (done) break;
+        document.getElementById("postcode").textContent = detectedPin || "Not returned";
+        document.getElementById("name").textContent = props.name || "—";
+        document.getElementById("city").textContent =
+          props.city || props.town || props.village || "—";
+        document.getElementById("district").textContent =
+          props.district || props.county || "—";
+        document.getElementById("state").textContent = props.state || "—";
+        document.getElementById("country").textContent = props.country || "—";
+        document.getElementById("street").textContent = props.street || "—";
+        document.getElementById("outLat").textContent = coords[1] ?? latitude;
+        document.getElementById("outLon").textContent = coords[0] ?? longitude;
+        document.getElementById("accuracy").textContent = accuracyText;
+        document.getElementById("osmType").textContent =
+          props.osm_type || props.type || "—";
 
-          buffer += decoder.decode(value, { stream: true });
+        const matchEl = document.getElementById("pinMatch");
 
-          const lines = buffer.split(/\r?\n/);
-          buffer = lines.pop() || "";
-
-          for (const line of lines) {
-            const trimmed = line.trim();
-            if (!trimmed) continue;
-
-            try {
-              handleEvent(JSON.parse(trimmed));
-            } catch (parseError) {
-              console.error("Unable to parse NDJSON line:", trimmed, parseError);
-            }
-          }
-        }
-
-        if (buffer.trim()) {
-          try {
-            handleEvent(JSON.parse(buffer.trim()));
-          } catch (parseError) {
-            console.error("Unable to parse final NDJSON line:", buffer, parseError);
-          }
-        }
-
-        if (!abortController.signal.aborted) {
-          setStatus("Connection closed");
-        }
-      } catch (error) {
-        if (error.name === "AbortError") {
-          setStatus("Stopped by user");
+        if (!feature) {
+          matchEl.textContent = "No result";
+          setStatus("Photon returned no location result for these coordinates.", "warn");
           return;
         }
 
+        if (!detectedPin) {
+          matchEl.textContent = "⚠️ Cannot compare";
+          setStatus(
+            `Photon found ${props.city || props.town || props.village || props.name || "the location"}, but returned no postcode.`,
+            "warn"
+          );
+        } else if (!expectedPin) {
+          matchEl.textContent = "Expected PIN not entered";
+          setStatus(`Detected PIN: ${detectedPin}`, "success");
+        } else if (detectedPin === expectedPin) {
+          matchEl.textContent = "✅ Correct — matches " + expectedPin;
+          setStatus(
+            `Success: Photon detected PIN ${detectedPin}, matching your expected PIN ${expectedPin}.`,
+            "success"
+          );
+        } else {
+          matchEl.textContent = `❌ Expected ${expectedPin}`;
+          setStatus(
+            `Mismatch: Photon detected ${detectedPin}, but you expected ${expectedPin}.`,
+            "error"
+          );
+        }
+
+      } catch (error) {
         console.error(error);
-        setStatus(`Error: ${error.message}`);
-
-        logEvent({
-          type: "client_error",
-          message: error.message
-        });
+        setStatus("Request failed: " + error.message, "error");
+        document.getElementById("raw").textContent =
+          JSON.stringify({ error: error.message }, null, 2);
       }
     }
 
-    function stopStream() {
-      if (abortController) {
-        abortController.abort();
-        abortController = null;
+    function testCoordinates() {
+      const lat = document.getElementById("lat").value.trim();
+      const lon = document.getElementById("lon").value.trim();
+
+      if (!lat || !lon) {
+        setStatus("Please enter both latitude and longitude.", "error");
+        return;
       }
+
+      reverseGeocode(lat, lon);
     }
 
-    function clearAll() {
-      stopStream();
-      Object.keys(insurerState).forEach((key) => delete insurerState[key]);
-      quotesEl.innerHTML = "";
-      logEl.innerHTML = "";
-      setStatus("Idle");
-    }
+    function useMyLocation() {
+      if (!navigator.geolocation) {
+        setStatus("Geolocation is not supported by this browser.", "error");
+        return;
+      }
 
-    document.getElementById("startBtn").addEventListener("click", startStream);
-    document.getElementById("stopBtn").addEventListener("click", stopStream);
-    document.getElementById("clearBtn").addEventListener("click", clearAll);
+      setStatus("Requesting your device location...", "info");
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude, accuracy } = position.coords;
+
+          document.getElementById("lat").value = latitude;
+          document.getElementById("lon").value = longitude;
+
+          reverseGeocode(
+            latitude,
+            longitude,
+            `${Math.round(accuracy)} meters`
+          );
+        },
+        (error) => {
+          let message = error.message;
+
+          if (error.code === 1) {
+            message = "Location permission was denied. Please allow location access.";
+          } else if (error.code === 2) {
+            message = "Your device could not determine the current location.";
+          } else if (error.code === 3) {
+            message = "Location request timed out.";
+          }
+
+          setStatus(message, "error");
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 0
+        }
+      );
+    }
   </script>
 </body>
 </html>
